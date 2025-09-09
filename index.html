@@ -24,10 +24,13 @@
     <link href="templates/template15/css/styled98d.css?v=202506122" rel="stylesheet">
     <link href="common/fonts/fontsd98d.css?v=202506122" rel="stylesheet">
     <link href="common/toastr/toastr.mind98d.css?v=202506122" rel="stylesheet">
+	<!-- Google reCAPTCHA v2 -->
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 	<!-- Global site tag (gtag.js) - Google Analytics -->
 	<script async src="https://www.googletagmanager.com/gtag/js?id=G-K9L0ZFE1PJ"></script>
 	<script>window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'G-K9L0ZFE1PJ');</script>
 </head>
+
 <script type="text/javascript">
     var photoGalleries = [];
     var dataWishes = [];
@@ -736,6 +739,8 @@ Năng động, vui vẻ và luôn biết tận hưởng cuộc sống, nhưng đ
                                         </div>
                                     </div>
                                 </div>
+								<!-- Captcha -->
+								<div class="g-recaptcha" data-sitekey="6Lf-ssMrAAAAALhtkX92XN5LTDvY56r7bqAfyVnc"></div>
                                 <div class="col col-sm-12 submit-btn">
                                     <button type="submit" class="theme-btn">Gửi lời chúc</button>
                                     <div id="loader">
@@ -918,6 +923,7 @@ Năng động, vui vẻ và luôn biết tận hưởng cuộc sống, nhưng đ
         }
         let biicore = parseJsonRecursively('{"template_id":"6174ef83a62963738e0a367c","templatePremium":false,"themeRoot":"index1cdc.html\/\/preview.iwedding.info\/templates\/template15","webroot":"index1cdc.html\/\/preview.iwedding.info","coreSite":"index1cdc.html\/\/biihappy.com","webToken":"61990349db8f76231c132068","isPremium":true,"bgMusic":"cdn.biihappy.com\/ziiweb\/wedding-musics\/IDo-911.mp3","alert":{"title":"L\u1eddi c\u1ea3m \u01a1n t\u1eeb D\u00e2u &amp; R\u1ec3","content":"Xin ch\u00e2n th\u00e0nh c\u1ea3m \u01a1n to\u00e0n th\u1ec3 m\u1ecdi ng\u01b0\u1eddi \u0111\u00e3 g\u1eedi l\u1eddi ch\u00fac cho v\u1ee3 ch\u1ed3ng ch\u00fang em!","timeout":5000,"status":2,"cancel_button_text":""},"effect":"{\\\"type\\\":\\\"snow\\\"}","logo":"index1cdc.html\/\/iwedding.info\/common\/imgs\/bii.png?v=20210131","url_landing_page":"index1cdc.html\/\/biihappy.com\/iwedding","isAutoPlay":true,"footer_title":"iWedding | N\u1ec1n t\u1ea3ng t\u1ea1o website \u0111\u00e1m c\u01b0\u1edbi mi\u1ec5n ph\u00ed t\u1eeb Biihappy","footer_title_mobile":"T\u1ea1o website \u0111\u00e1m c\u01b0\u1edbi mi\u1ec5n ph\u00ed"}');
     </script>
+	
     <script src="templates/template15/js/jquery-plugin-collectiond98d.js?v=202506122"></script>
     <script src="templates/template15/js/scriptd98d.js?v=202506122"></script>
     <script src="common/calendard98d.js?v=202506122"></script>
@@ -930,6 +936,106 @@ Năng động, vui vẻ và luôn biết tận hưởng cuộc sống, nhưng đ
             toastMessageWishes(dataWishes,'wishes');
         }
     </script>
+	<script>
+		async function loadWishes() {
+			try {
+				const res = await fetch("https://guestbook-api-ashen.vercel.app/api/guestbook");
+				const wishes = await res.json();
+
+				const wishBox = document.querySelector(".wish-box");
+				wishBox.innerHTML = ""; // Xóa trống trước khi render
+
+				wishes.reverse().forEach(wish => {
+					const item = document.createElement("div");
+					item.classList.add("wish-box-item");
+					item.innerHTML = `
+						<strong>${wish.name}</strong>
+						<p>${wish.content}</p>
+						<script type="text/javascript">
+							dataWishes.push({
+								name: \`${wish.name}\`,
+								content: \`${wish.content}\`
+							});
+						<\/script>
+					`;
+					wishBox.appendChild(item);
+				});
+			} catch (err) {
+				console.error("Không thể load lời chúc:", err);
+			}
+		}
+
+		document.getElementById("wish-form").addEventListener("submit", async function (e) {
+			e.preventDefault();
+
+			const name = document.querySelector("input[name='name']").value.trim();
+			const email = document.querySelector("input[name='email']").value.trim();
+			const content = document.querySelector("textarea[name='content']").value.trim();
+			const captcha = grecaptcha.getResponse();
+
+			document.getElementById("success").style.display = "none";
+			document.getElementById("error").style.display = "none";
+
+			if (!name) {
+				alert("Vui lòng nhập họ tên!");
+				return;
+			}
+			if (!content || content.length < 10) {
+				alert("Lời chúc phải nhiều hơn 10 ký tự!");
+				return;
+			}
+			if (!captcha) {
+				alert("Vui lòng xác minh Captcha!");
+				return;
+			}
+
+			document.getElementById("loader").style.display = "inline-block";
+
+			try {
+				const res = await fetch("https://guestbook-api-ashen.vercel.app/api/guestbook", {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({ name, email, content, captcha }),
+				});
+
+				const data = await res.json();
+
+				if (res.ok) {
+					// Thêm lời chúc mới ngay vào giao diện
+					const wishBox = document.querySelector(".wish-box");
+					const newItem = document.createElement("div");
+					newItem.classList.add("wish-box-item");
+					newItem.innerHTML = `
+						<strong>${data.wish.name}</strong>
+						<p>${data.wish.content}</p>
+						<script type="text/javascript">
+							dataWishes.push({
+								name: \`${data.wish.name}\`,
+								content: \`${data.wish.content}\`
+							});
+						<\/script>
+					`;
+
+					// Đưa lên đầu danh sách
+					wishBox.prepend(newItem);
+
+					document.getElementById("success").style.display = "block";
+					document.getElementById("wish-form").reset();
+					grecaptcha.reset();
+				} else {
+					document.getElementById("error").style.display = "block";
+				}
+			} catch (err) {
+				console.error(err);
+				document.getElementById("error").style.display = "block";
+			}
+
+			document.getElementById("loader").style.display = "none";
+		});
+
+		// Tải lời chúc khi load trang
+		document.addEventListener("DOMContentLoaded", loadWishes);
+	</script>
 </body>
 
 </html>
