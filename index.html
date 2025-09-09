@@ -792,7 +792,7 @@ Năng động, vui vẻ và luôn biết tận hưởng cuộc sống, nhưng đ
                                     </div>
                                 </div>
                                 <div class="col col-md-12 success-error-message">
-                                    <div id="success">Thank you</div>
+                                    <div id="success">Cảm ơn lời chúc của bạn!</div>
                                     <div id="error">Gửi lời chúc thất bại, vui lòng thử lại sau giây lát! </div>
                                 </div>
                             </form>
@@ -1012,71 +1012,72 @@ Năng động, vui vẻ và luôn biết tận hưởng cuộc sống, nhưng đ
 	document.getElementById("wish-form").addEventListener("submit", async function (e) {
     e.preventDefault();
 
-    const name = document.querySelector("input[name='name']").value.trim();
-    const email = document.querySelector("input[name='email']").value.trim();
-    const content = document.querySelector("textarea[name='content']").value.trim();
+    const name = this.name.value.trim();
+    const email = this.email.value.trim();
+    const content = this.content.value.trim();
     const captcha = grecaptcha.getResponse();
 
-    // Ẩn thông báo cũ
-    document.getElementById("success").style.display = "none";
-    document.getElementById("error").style.display = "none";
+    const successEl = document.getElementById("success");
+    const errorEl = document.getElementById("error");
+    const loader = document.getElementById("loader");
 
-    // Kiểm tra input
-    if (!name) {
-        alert("Vui lòng nhập họ tên!");
+    // reset message
+    successEl.style.display = "none";
+    errorEl.style.display = "none";
+
+    // validate
+    if (!name || !content) {
+        errorEl.textContent = "Tên và lời chúc không được để trống!";
+        errorEl.style.display = "block";
         return;
     }
-    if (!content || content.length < 10) {
-        alert("Lời chúc phải nhiều hơn 10 ký tự!");
+    if (content.length < 10) {
+        errorEl.textContent = "Lời chúc phải nhiều hơn 10 ký tự!";
+        errorEl.style.display = "block";
         return;
     }
     if (!captcha) {
-        alert("Vui lòng xác minh Captcha!");
+        errorEl.textContent = "Vui lòng xác minh Captcha!";
+        errorEl.style.display = "block";
         return;
     }
 
-    document.getElementById("loader").style.display = "inline-block";
+    // show loader
+    loader.style.display = "inline-block";
 
     try {
         const res = await fetch("https://guestbook-api-ashen.vercel.app/api/guestbook", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+                "Content-Type": "application/json",
+            },
             body: JSON.stringify({ name, email, content, captcha }),
         });
 
         const data = await res.json();
+        loader.style.display = "none";
 
-        if (res.ok) {
-            // Chèn ngay vào wish-box
-            const wishBox = document.querySelector(".wish-box");
-            const newItem = document.createElement("div");
-            newItem.classList.add("wish-box-item");
-            newItem.innerHTML = `
-                <strong>${data.wish.name}</strong>
-                <p>${data.wish.content}</p>
-                <script type="text/javascript">
-                    dataWishes.push({
-                        name: \`${data.wish.name}\`,
-                        content: \`${data.wish.content}\`
-                    });
-                <\/script>
-            `;
-            wishBox.prepend(newItem);
-
-            document.getElementById("success").style.display = "block";
-            document.getElementById("wish-form").reset();
+        if (res.ok && data.success) {
+            successEl.style.display = "block";
+            this.reset();
             grecaptcha.reset();
+
+            // thêm lời chúc mới ngay vào wish-box
+            const wishBox = document.querySelector(".wish-box");
+            const item = document.createElement("div");
+            item.className = "wish-box-item";
+            item.innerHTML = `<strong>${name}</strong><p>${content}</p>`;
+            wishBox.prepend(item);
         } else {
-            document.getElementById("error").style.display = "block";
+            errorEl.textContent = data.message || "Gửi lời chúc thất bại, vui lòng thử lại!";
+            errorEl.style.display = "block";
         }
     } catch (err) {
-        console.error(err);
-        document.getElementById("error").style.display = "block";
+        loader.style.display = "none";
+        errorEl.textContent = "Lỗi kết nối server!";
+        errorEl.style.display = "block";
     }
-
-    document.getElementById("loader").style.display = "none";
 });
-
 
 		// Tải lời chúc khi load trang
 		document.addEventListener("DOMContentLoaded", loadWishes);
