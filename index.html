@@ -981,22 +981,13 @@ Năng động, vui vẻ và luôn biết tận hưởng cuộc sống, nhưng đ
         }
     </script>
 	<script>
-document.addEventListener("DOMContentLoaded", function() {
-  const form = document.getElementById("wish-form");
-  if (form) {
-    // chặn action mặc định để plugin khỏi gửi
-    form.setAttribute("action", "javascript:void(0);");
-  }
-});
-</script>
-	<script>
 async function loadWishes() {
     try {
         const res = await fetch("https://guestbook-api-ashen.vercel.app/api/guestbook");
         const wishes = await res.json();
 
         const wishBox = document.querySelector(".wish-box");
-        wishBox.innerHTML = ""; // Xóa trống trước khi render
+        wishBox.innerHTML = "";
 
         wishes.reverse().forEach(wish => {
             const item = document.createElement("div");
@@ -1019,7 +1010,9 @@ async function loadWishes() {
 }
 
 document.getElementById("wish-form").addEventListener("submit", async function (e) {
+    // ⛔️ Chặn các handler cũ (plugin) không cho chạy
     e.preventDefault();
+    e.stopImmediatePropagation();
 
     const name = document.querySelector("input[name='name']").value.trim();
     const email = document.querySelector("input[name='email']").value.trim();
@@ -1053,31 +1046,29 @@ document.getElementById("wish-form").addEventListener("submit", async function (
 
         const data = await res.json();
 
-		if (res.ok) {
-			// Thêm lời chúc mới ngay vào giao diện
-			const wishBox = document.querySelector(".wish-box");
-			const newItem = document.createElement("div");
-			newItem.classList.add("wish-box-item");
-			newItem.innerHTML = `
-				<strong>${data.wish.name}</strong>
-				<p>${data.wish.content}</p>
-				<script type="text/javascript">
-					dataWishes.push({
-						name: \`${data.wish.name}\`,
-						content: \`${data.wish.content}\`
-					});
-				<\/script>
-			`;
+        if (res.ok) {
+            const wishBox = document.querySelector(".wish-box");
+            const newItem = document.createElement("div");
+            newItem.classList.add("wish-box-item");
+            newItem.innerHTML = `
+                <strong>${data.wish.name}</strong>
+                <p>${data.wish.content}</p>
+                <script type="text/javascript">
+                    dataWishes.push({
+                        name: \`${data.wish.name}\`,
+                        content: \`${data.wish.content}\`
+                    });
+                <\/script>
+            `;
+            wishBox.prepend(newItem);
 
-			// Đưa lên đầu danh sách
-			wishBox.prepend(newItem);
-
-			document.getElementById("success").style.display = "block";
-			document.getElementById("wish-form").reset();
-			grecaptcha.reset();
-		} else {
-			document.getElementById("error").style.display = "block";
-		}
+            document.getElementById("success").style.display = "block";
+            document.getElementById("success").style.color = "green";
+            document.getElementById("wish-form").reset();
+            grecaptcha.reset();
+        } else {
+            document.getElementById("error").style.display = "block";
+        }
     } catch (err) {
         console.error(err);
         document.getElementById("error").style.display = "block";
@@ -1086,9 +1077,10 @@ document.getElementById("wish-form").addEventListener("submit", async function (
     document.getElementById("loader").style.display = "none";
 });
 
-// Tải lời chúc khi load trang
+// Load wishes khi mở trang
 document.addEventListener("DOMContentLoaded", loadWishes);
 </script>
+
 </body>
 
 </html>
