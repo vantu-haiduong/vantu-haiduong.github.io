@@ -488,6 +488,47 @@ button#btn-submit-comment:hover {
 #show-comments::-webkit-scrollbar-thumb {
   background-color:#5C636A;
 }
+		.captcha-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center; /* căn giữa ngang */
+  margin: 15px 0; /* tạo khoảng cách trên dưới */
+}
+
+.submit-btn {
+  margin-top: 10px; /* hạ nút xuống một chút */
+  text-align: center; /* căn giữa nút */
+}
+  /* Đưa reCAPTCHA lên cao nhất và “tách” khỏi các phần tử float/overlay xung quanh */
+		
+  #wish-form .g-recaptcha {
+    position: relative;
+    z-index: 9999 !important;
+    display: block;
+    clear: both;
+    min-height: 78px; /* tạo khoảng chiếm chỗ cho iframe */
+    margin-top: 12px;
+  }
+
+  /* Hạ z-index các panel có thể đè lên (icon/emoji/suggestion) */
+  #wish-form .textAreaIcons,
+  #wish-form .emoji-picker,
+  #wish-form .wishes-autocomplete-content,
+  #wish-form .vitualTextarea {
+    position: relative;
+    z-index: 1 !important;
+  }
+
+  /* Khi khung gợi ý bị ẩn thì tuyệt đối không chặn click */
+  #wish-form .wishes-autocomplete-content[style*="display: none"] {
+    pointer-events: none !important;
+  }
+
+  /* Phòng trường hợp có phần tử phủ toàn vùng submit */
+  #wish-form .submit-btn {
+    position: relative;
+    z-index: 2;
+  }
 
 .emoji-picker{max-width:100%;display:none;position: absolute;user-select: none!important;background: #fff;right: 0px;z-index: 9999;bottom: -355px;-webkit-box-shadow: 0 1px 2px 0 rgb(60 64 67 / 35%), 0 2px 6px 2px rgb(60 64 67 / 35%);box-shadow: 0 1px 2px 0 rgb(60 64 67 / 35%), 0 2px 6px 2px rgb(60 64 67 / 35%);border-radius: 0.5rem;overflow: hidden;}
 .emoji-picker > emoji-picker{--emoji-size:22px;}
@@ -620,4 +661,5 @@ border-left: 5px solid red;
   .toast-top-right{
        top: 62px!important;
    }
+
 }
