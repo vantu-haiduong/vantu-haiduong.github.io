@@ -984,101 +984,101 @@ Năng động, vui vẻ và luôn biết tận hưởng cuộc sống, nhưng đ
 async function loadWishes() {
     try {
         const res = await fetch("https://guestbook-api-ashen.vercel.app/api/guestbook");
-        const data = await res.json();
+        const wishes = await res.json();
 
-        if (res.ok && data.wishes) {
-            const wishBox = document.querySelector(".wish-box");
-            wishBox.innerHTML = "";
-            data.wishes.forEach(wish => {
-                const item = document.createElement("div");
-                item.classList.add("wish-box-item");
-                item.innerHTML = `<strong>${wish.name}</strong><p>${wish.content}</p>`;
-                wishBox.appendChild(item);
-            });
-        }
+        const wishBox = document.querySelector(".wish-box");
+        wishBox.innerHTML = ""; // Xóa trống trước khi render
+
+        wishes.reverse().forEach(wish => {
+            const item = document.createElement("div");
+            item.classList.add("wish-box-item");
+            item.innerHTML = `
+                <strong>${wish.name}</strong>
+                <p>${wish.content}</p>
+                <script type="text/javascript">
+                    dataWishes.push({
+                        name: \`${wish.name}\`,
+                        content: \`${wish.content}\`
+                    });
+                <\/script>
+            `;
+            wishBox.appendChild(item);
+        });
     } catch (err) {
         console.error("Không thể load lời chúc:", err);
     }
 }
 
-document.addEventListener("DOMContentLoaded", function () {
-    loadWishes();
+document.getElementById("wish-form").addEventListener("submit", async function (e) {
+    e.preventDefault();
 
-    document.getElementById("wish-form").addEventListener("submit", async function (e) {
-        e.preventDefault();
+    const name = document.querySelector("input[name='name']").value.trim();
+    const email = document.querySelector("input[name='email']").value.trim();
+    const content = document.querySelector("textarea[name='content']").value.trim();
+    const captcha = grecaptcha.getResponse();
 
-        const name = document.querySelector("input[name='name']").value.trim();
-        const email = document.querySelector("input[name='email']").value.trim();
-        const content = document.querySelector("textarea[name='content']").value.trim();
-        const captcha = grecaptcha.getResponse();
+    document.getElementById("success").style.display = "none";
+    document.getElementById("error").style.display = "none";
 
-        const successEl = document.getElementById("success");
-        const errorEl = document.getElementById("error");
-        const loader = document.getElementById("loader");
-        const wishBox = document.querySelector(".wish-box");
+    if (!name) {
+        alert("Vui lòng nhập họ tên!");
+        return;
+    }
+    if (!content || content.length < 10) {
+        alert("Lời chúc phải nhiều hơn 10 ký tự!");
+        return;
+    }
+    if (!captcha) {
+        alert("Vui lòng xác minh Captcha!");
+        return;
+    }
 
-        // Reset thông báo
-        successEl.style.display = "none";
-        errorEl.style.display = "none";
+    document.getElementById("loader").style.display = "inline-block";
 
-        // Validate
-        if (!name) {
-            errorEl.textContent = "Vui lòng nhập họ tên!";
-            errorEl.style.display = "block";
-            setTimeout(() => (errorEl.style.display = "none"), 3000);
-            return;
-        }
-        if (!content || content.length < 10) {
-            errorEl.textContent = "Lời chúc phải nhiều hơn 10 ký tự!";
-            errorEl.style.display = "block";
-            setTimeout(() => (errorEl.style.display = "none"), 3000);
-            return;
-        }
-        if (!captcha) {
-            errorEl.textContent = "Vui lòng xác minh Captcha!";
-            errorEl.style.display = "block";
-            setTimeout(() => (errorEl.style.display = "none"), 3000);
-            return;
-        }
+    try {
+        const res = await fetch("https://guestbook-api-ashen.vercel.app/api/guestbook", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name, email, content, captcha }),
+        });
 
-        loader.style.display = "inline-block";
+        const data = await res.json();
 
-        try {
-            const res = await fetch("https://guestbook-api-ashen.vercel.app/api/guestbook", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name, email, content, captcha }),
-            });
+		if (res.ok) {
+			// Thêm lời chúc mới ngay vào giao diện
+			const wishBox = document.querySelector(".wish-box");
+			const newItem = document.createElement("div");
+			newItem.classList.add("wish-box-item");
+			newItem.innerHTML = `
+				<strong>${data.wish.name}</strong>
+				<p>${data.wish.content}</p>
+				<script type="text/javascript">
+					dataWishes.push({
+						name: \`${data.wish.name}\`,
+						content: \`${data.wish.content}\`
+					});
+				<\/script>
+			`;
 
-            const data = await res.json();
-            loader.style.display = "none";
+			// Đưa lên đầu danh sách
+			wishBox.prepend(newItem);
 
-            if (res.ok && data.success) {
-                // Thêm lời chúc mới ngay
-                const newItem = document.createElement("div");
-                newItem.classList.add("wish-box-item");
-                newItem.innerHTML = `<strong>${name}</strong><p>${content}</p>`;
-                wishBox.prepend(newItem);
+			document.getElementById("success").style.display = "block";
+			document.getElementById("wish-form").reset();
+			grecaptcha.reset();
+		} else {
+			document.getElementById("error").style.display = "block";
+		}
+    } catch (err) {
+        console.error(err);
+        document.getElementById("error").style.display = "block";
+    }
 
-                successEl.style.display = "block";
-                setTimeout(() => (successEl.style.display = "none"), 3000);
-
-                document.getElementById("wish-form").reset();
-                grecaptcha.reset();
-            } else {
-                errorEl.textContent = data.message || "Gửi lời chúc thất bại!";
-                errorEl.style.display = "block";
-                setTimeout(() => (errorEl.style.display = "none"), 3000);
-            }
-        } catch (err) {
-            console.error(err);
-            loader.style.display = "none";
-            errorEl.textContent = "Lỗi kết nối server!";
-            errorEl.style.display = "block";
-            setTimeout(() => (errorEl.style.display = "none"), 3000);
-        }
-    });
+    document.getElementById("loader").style.display = "none";
 });
+
+// Tải lời chúc khi load trang
+document.addEventListener("DOMContentLoaded", loadWishes);
 </script>
 </body>
 
