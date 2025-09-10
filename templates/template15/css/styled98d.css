@@ -8236,3 +8236,33 @@ img {
        top: 62px!important;
    }
 }
+
+ /* Đưa reCAPTCHA lên cao nhất và “tách” khỏi các phần tử float/overlay xung quanh */
+  #wish-form .g-recaptcha {
+    position: relative;
+    z-index: 9999 !important;
+    display: block;
+    clear: both;
+    min-height: 78px; /* tạo khoảng chiếm chỗ cho iframe */
+    margin-top: 12px;
+  }
+
+  /* Hạ z-index các panel có thể đè lên (icon/emoji/suggestion) */
+  #wish-form .textAreaIcons,
+  #wish-form .emoji-picker,
+  #wish-form .wishes-autocomplete-content,
+  #wish-form .vitualTextarea {
+    position: relative;
+    z-index: 1 !important;
+  }
+
+  /* Khi khung gợi ý bị ẩn thì tuyệt đối không chặn click */
+  #wish-form .wishes-autocomplete-content[style*="display: none"] {
+    pointer-events: none !important;
+  }
+
+  /* Phòng trường hợp có phần tử phủ toàn vùng submit */
+  #wish-form .submit-btn {
+    position: relative;
+    z-index: 2;
+  }
