@@ -8266,3 +8266,26 @@ img {
     position: relative;
     z-index: 2;
   }
+.captcha-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center; /* căn giữa ngang */
+  margin: 15px 0; /* tạo khoảng cách trên dưới */
+}
+
+.submit-btn {
+  margin-top: 10px; /* hạ nút xuống một chút */
+  text-align: center; /* căn giữa nút */
+}
+.g-recaptcha {
+  transform: scale(0.85);   /* Thu nhỏ trên mobile */
+  transform-origin: 0 0;    /* Giữ góc trên bên trái cố định */
+}
+
+/* Tuỳ chỉnh theo breakpoint */
+@media (max-width: 480px) {
+  .g-recaptcha {
+    transform: scale(0.75);
+    transform-origin: 0 0;
+  }
+}
