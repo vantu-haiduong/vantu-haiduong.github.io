@@ -981,6 +981,15 @@ Năng động, vui vẻ và luôn biết tận hưởng cuộc sống, nhưng đ
         }
     </script>
 	<script>
+document.addEventListener("DOMContentLoaded", function() {
+  const form = document.getElementById("wish-form");
+  if (form) {
+    // chặn action mặc định để plugin khỏi gửi
+    form.setAttribute("action", "javascript:void(0);");
+  }
+});
+</script>
+	<script>
 async function loadWishes() {
     try {
         const res = await fetch("https://guestbook-api-ashen.vercel.app/api/guestbook");
